@@ -1,0 +1,58 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  
+  body {
+    @apply bg-stone-50 text-gray-900;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.5s ease-out;
+}
+
+/* Styles Lodgify */
+:root {
+  --ldg-psb-background: #ffffff;
+  --ldg-psb-border-radius: 0.42em;
+  --ldg-psb-box-shadow: 0px 24px 54px 0px rgba(0, 0, 0, 0.1);
+  --ldg-psb-padding: 14px;
+  --ldg-psb-input-background: #ffffff;
+  --ldg-psb-button-border-radius: 3.58em;
+  --ldg-psb-color-primary: #16d02b;
+  --ldg-psb-color-primary-lighter: #8be895;
+  --ldg-psb-color-primary-darker: #0b6816;
+  --ldg-psb-color-primary-contrast: #333333;
+  --ldg-semantic-color-primary: #16d02b;
+  --ldg-semantic-color-primary-lighter: #8be895;
+  --ldg-semantic-color-primary-darker: #0b6816;
+  --ldg-semantic-color-primary-contrast: #333333;
+  --ldg-component-modal-z-index: 999;
+}
+
+#lodgify-search-bar {
+  width: 100%;
+}
+

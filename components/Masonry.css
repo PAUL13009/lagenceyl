@@ -1,0 +1,28 @@
+.list {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  padding: 0;
+  contain: layout style paint;
+}
+
+.item-wrapper {
+  position: absolute;
+  cursor: pointer;
+  will-change: transform, opacity;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.item-img {
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+  border-radius: 8px;
+  overflow: hidden;
+  transform: translateZ(0);
+  will-change: transform;
+}
+
