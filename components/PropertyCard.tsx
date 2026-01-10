@@ -90,13 +90,17 @@ export default function PropertyCard({ property, currentIndex, onPrevious, onNex
                 e.stopPropagation()
                 onPrevious()
               }}
-              className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-white/60 hover:bg-white/80 text-gray-700 rounded-full p-1.5 shadow-md z-40 transition-all duration-300 opacity-0 group-hover:opacity-80"
+              className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-white/60 hover:bg-white/80 text-gray-700 rounded-full p-1.5 shadow-md z-40 transition-all duration-300 opacity-80 md:opacity-0 md:group-hover:opacity-80"
               aria-label="Image précédente"
               onMouseEnter={(e) => {
-                e.currentTarget.style.opacity = '0.8'
+                if (window.innerWidth >= 768) {
+                  e.currentTarget.style.opacity = '0.8'
+                }
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.opacity = '0'
+                if (window.innerWidth >= 768) {
+                  e.currentTarget.style.opacity = '0'
+                }
               }}
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -109,13 +113,17 @@ export default function PropertyCard({ property, currentIndex, onPrevious, onNex
                 e.stopPropagation()
                 onNext()
               }}
-              className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-white/60 hover:bg-white/80 text-gray-700 rounded-full p-1.5 shadow-md z-40 transition-all duration-300 opacity-0 group-hover:opacity-80"
+              className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-white/60 hover:bg-white/80 text-gray-700 rounded-full p-1.5 shadow-md z-40 transition-all duration-300 opacity-80 md:opacity-0 md:group-hover:opacity-80"
               aria-label="Image suivante"
               onMouseEnter={(e) => {
-                e.currentTarget.style.opacity = '0.8'
+                if (window.innerWidth >= 768) {
+                  e.currentTarget.style.opacity = '0.8'
+                }
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.opacity = '0'
+                if (window.innerWidth >= 768) {
+                  e.currentTarget.style.opacity = '0'
+                }
               }}
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -127,7 +135,7 @@ export default function PropertyCard({ property, currentIndex, onPrevious, onNex
 
         {/* Indicateurs de position */}
         {property.images.length > 1 && (
-          <div className="absolute bottom-3 left-1/2 transform -translate-x-1/2 flex space-x-2 z-40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+          <div className="absolute bottom-3 left-1/2 transform -translate-x-1/2 flex space-x-2 z-40 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
             {property.images.map((_, index) => (
               <button
                 key={index}
@@ -190,7 +198,7 @@ export default function PropertyCard({ property, currentIndex, onPrevious, onNex
         {/* CTA "Voir le bien" - apparaît au survol en dessous */}
         <Link
           href={`/properties/${property.id}`}
-          className="text-xs sm:text-sm font-semibold opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-500 ease-out"
+          className="text-xs sm:text-sm font-semibold opacity-100 translate-y-0 md:opacity-0 md:translate-y-2 md:group-hover:opacity-100 md:group-hover:translate-y-0 transition-all duration-500 ease-out"
           style={{ color: '#4682B4', fontFamily: 'var(--font-poppins), sans-serif' }}
           onClick={(e) => {
             e.stopPropagation()

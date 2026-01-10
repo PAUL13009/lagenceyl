@@ -255,8 +255,11 @@ export default function Navbar() {
     }
   }, [menuOpen, playClose, animateIcon])
 
-  // Détection du curseur à l'extrémité droite pour ouvrir le menu automatiquement
+  // Détection du curseur à l'extrémité droite pour ouvrir le menu automatiquement (uniquement sur desktop)
   useEffect(() => {
+    // Désactiver cette fonctionnalité sur mobile
+    if (isMobile) return
+
     const handleMouseMove = (e: MouseEvent) => {
       const windowWidth = window.innerWidth
       const mouseX = e.clientX
@@ -272,7 +275,7 @@ export default function Navbar() {
 
     window.addEventListener('mousemove', handleMouseMove, { passive: true })
     return () => window.removeEventListener('mousemove', handleMouseMove)
-  }, [menuOpen, playOpen, animateIcon])
+  }, [menuOpen, playOpen, animateIcon, isMobile])
 
   // Fermeture automatique du menu quand le curseur quitte le menu
   useEffect(() => {

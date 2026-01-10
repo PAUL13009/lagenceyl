@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import Hero from '@/components/Hero'
@@ -8,7 +8,6 @@ import FadeContent from '@/components/FadeContent'
 import PropertyCard from '@/components/PropertyCard'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
-import { useScrollButtonAnimation } from '@/hooks/useScrollButtonAnimation'
 
 interface PropertyImage {
   src: string
@@ -42,8 +41,9 @@ export default function CataloguePage() {
   const [properties, setProperties] = useState<Property[]>([])
   const [loading, setLoading] = useState(true)
   const [currentImageIndex, setCurrentImageIndex] = useState<Record<string | number, number>>({})
-  const estimationCtaButtonRef = useScrollButtonAnimation()
-  const approcheCtaButtonRef = useScrollButtonAnimation()
+  const estimationCtaRef = useRef<HTMLAnchorElement>(null)
+  const approcheCtaRef = useRef<HTMLAnchorElement>(null)
+  const observersRef = useRef<IntersectionObserver[]>([])
   
   const [filters, setFilters] = useState<Filters>({
     status: '',
@@ -221,6 +221,130 @@ export default function CataloguePage() {
     const locations = properties.map(p => p.location).filter(Boolean)
     return Array.from(new Set(locations)).sort()
   }, [properties])
+
+  // Hook pour l'animation au scroll sur mobile uniquement pour les boutons CTA
+  useEffect(() => {
+    // Attendre que les boutons soient rendus (quand !loading)
+    if (loading) return
+
+    const isMobile = () => window.innerWidth < 768
+    if (!isMobile()) return
+
+    // Nettoyer les anciens observers
+    observersRef.current.forEach(observer => observer.disconnect())
+    observersRef.current = []
+
+    const triggerAnimation = (button: HTMLElement) => {
+      const fill = button.querySelector('.button-fill') as HTMLElement
+      const arrow = button.querySelector('.button-arrow') as HTMLElement
+      const text = button.querySelector('.button-text') as HTMLElement
+      const textSpan = button.querySelector('.button-text span') as HTMLElement
+
+      if (fill) {
+        fill.style.width = '100%'
+        fill.style.transform = 'translateX(-50%) scaleY(1)'
+      }
+      if (arrow) {
+        arrow.style.opacity = '1'
+        arrow.style.right = '-14px'
+      }
+      if (text) {
+        text.style.color = 'white'
+      }
+      if (textSpan) {
+        textSpan.style.transform = 'translateX(-8px)'
+      }
+    }
+
+    const resetAnimation = (button: HTMLElement) => {
+      const fill = button.querySelector('.button-fill') as HTMLElement
+      const arrow = button.querySelector('.button-arrow') as HTMLElement
+      const text = button.querySelector('.button-text') as HTMLElement
+      const textSpan = button.querySelector('.button-text span') as HTMLElement
+
+      if (fill) {
+        fill.style.width = '0%'
+        fill.style.transform = 'translateX(-50%) scaleY(0)'
+      }
+      if (arrow) {
+        arrow.style.opacity = '0'
+        arrow.style.right = '-30px'
+      }
+      if (text) {
+        text.style.color = '#4682B4'
+      }
+      if (textSpan) {
+        textSpan.style.transform = 'translateX(0)'
+      }
+    }
+
+    const setupObservers = (buttons: HTMLElement[]) => {
+      observersRef.current = buttons.map((button) => {
+        let isAnimated = false
+        
+        const observer = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((entry) => {
+              if (isMobile()) {
+                if (entry.isIntersecting && !isAnimated) {
+                  // Déclencher l'animation dès que le bouton est visible
+                  triggerAnimation(button)
+                  isAnimated = true
+                } else if (!entry.isIntersecting && isAnimated) {
+                  // Réinitialiser uniquement quand le bouton sort complètement du viewport
+                  resetAnimation(button)
+                  isAnimated = false
+                }
+              }
+            })
+          },
+          {
+            threshold: 0.01, // Déclencher dès que 1% du bouton est visible
+            rootMargin: '50px 0px' // Déclencher 50px avant que le bouton entre dans le viewport
+          }
+        )
+
+        observer.observe(button)
+        return observer
+      })
+    }
+
+    // Utiliser setTimeout pour s'assurer que les boutons sont dans le DOM
+    const timer = setTimeout(() => {
+      const buttons = [estimationCtaRef.current, approcheCtaRef.current].filter(Boolean) as HTMLElement[]
+      if (buttons.length === 0) {
+        // Si les boutons ne sont pas encore disponibles, réessayer
+        return
+      }
+
+      // Vérifier que les boutons ont bien les éléments nécessaires
+      const hasRequiredElements = buttons.every(button => {
+        const fill = button.querySelector('.button-fill')
+        const arrow = button.querySelector('.button-arrow')
+        const text = button.querySelector('.button-text')
+        return fill && arrow && text
+      })
+
+      if (!hasRequiredElements) {
+        // Si les éléments ne sont pas encore rendus, réessayer après un délai
+        setTimeout(() => {
+          const retryButtons = [estimationCtaRef.current, approcheCtaRef.current].filter(Boolean) as HTMLElement[]
+          if (retryButtons.length > 0) {
+            setupObservers(retryButtons)
+          }
+        }, 200)
+        return
+      }
+
+      setupObservers(buttons)
+    }, 300) // Délai augmenté pour s'assurer que les boutons sont rendus
+
+    return () => {
+      clearTimeout(timer)
+      observersRef.current.forEach(observer => observer.disconnect())
+      observersRef.current = []
+    }
+  }, [loading])
 
   return (
     <main className="min-h-screen bg-white">
@@ -451,7 +575,7 @@ export default function CataloguePage() {
                     Faites estimer votre bien pour connaître sa valeur réelle sur le marché.
                   </p>
                   <Link
-                    ref={estimationCtaButtonRef as any}
+                    ref={estimationCtaRef}
                     href="/estimation"
                     className="group relative inline-block px-8 py-4 rounded-full font-medium overflow-hidden transition-all duration-500"
                     style={{
@@ -464,36 +588,40 @@ export default function CataloguePage() {
                       letterSpacing: '0.3px'
                     }}
                     onMouseEnter={(e) => {
-                      const fill = e.currentTarget.querySelector('.button-fill') as HTMLElement
-                      const arrow = e.currentTarget.querySelector('.button-arrow') as HTMLElement
-                      const text = e.currentTarget.querySelector('.button-text') as HTMLElement
-                      const textSpan = e.currentTarget.querySelector('.button-text span') as HTMLElement
-                      if (fill) {
-                        fill.style.width = '100%'
-                        fill.style.transform = 'translateX(-50%) scaleY(1)'
+                      if (window.innerWidth >= 768) {
+                        const fill = e.currentTarget.querySelector('.button-fill') as HTMLElement
+                        const arrow = e.currentTarget.querySelector('.button-arrow') as HTMLElement
+                        const text = e.currentTarget.querySelector('.button-text') as HTMLElement
+                        const textSpan = e.currentTarget.querySelector('.button-text span') as HTMLElement
+                        if (fill) {
+                          fill.style.width = '100%'
+                          fill.style.transform = 'translateX(-50%) scaleY(1)'
+                        }
+                        if (arrow) {
+                          arrow.style.opacity = '1'
+                          arrow.style.right = '-14px'
+                        }
+                        if (text) text.style.color = 'white'
+                        if (textSpan) textSpan.style.transform = 'translateX(-8px)'
                       }
-                      if (arrow) {
-                        arrow.style.opacity = '1'
-                        arrow.style.right = '-14px'
-                      }
-                      if (text) text.style.color = 'white'
-                      if (textSpan) textSpan.style.transform = 'translateX(-8px)'
                     }}
                     onMouseLeave={(e) => {
-                      const fill = e.currentTarget.querySelector('.button-fill') as HTMLElement
-                      const arrow = e.currentTarget.querySelector('.button-arrow') as HTMLElement
-                      const text = e.currentTarget.querySelector('.button-text') as HTMLElement
-                      const textSpan = e.currentTarget.querySelector('.button-text span') as HTMLElement
-                      if (fill) {
-                        fill.style.width = '0%'
-                        fill.style.transform = 'translateX(-50%) scaleY(0)'
+                      if (window.innerWidth >= 768) {
+                        const fill = e.currentTarget.querySelector('.button-fill') as HTMLElement
+                        const arrow = e.currentTarget.querySelector('.button-arrow') as HTMLElement
+                        const text = e.currentTarget.querySelector('.button-text') as HTMLElement
+                        const textSpan = e.currentTarget.querySelector('.button-text span') as HTMLElement
+                        if (fill) {
+                          fill.style.width = '0%'
+                          fill.style.transform = 'translateX(-50%) scaleY(0)'
+                        }
+                        if (arrow) {
+                          arrow.style.opacity = '0'
+                          arrow.style.right = '-30px'
+                        }
+                        if (text) text.style.color = '#4682B4'
+                        if (textSpan) textSpan.style.transform = 'translateX(0)'
                       }
-                      if (arrow) {
-                        arrow.style.opacity = '0'
-                        arrow.style.right = '-30px'
-                      }
-                      if (text) text.style.color = '#4682B4'
-                      if (textSpan) textSpan.style.transform = 'translateX(0)'
                     }}
                   >
                     {/* Fond bleu qui se remplit */}
@@ -538,7 +666,7 @@ export default function CataloguePage() {
                     Découvrez notre approche structurée et transparente.
                   </p>
                   <Link
-                    ref={approcheCtaButtonRef as any}
+                    ref={approcheCtaRef}
                     href="/notre-methode"
                     className="group relative inline-block px-8 py-4 rounded-full font-medium overflow-hidden transition-all duration-500"
                     style={{
@@ -551,36 +679,40 @@ export default function CataloguePage() {
                       letterSpacing: '0.3px'
                     }}
                     onMouseEnter={(e) => {
-                      const fill = e.currentTarget.querySelector('.button-fill') as HTMLElement
-                      const arrow = e.currentTarget.querySelector('.button-arrow') as HTMLElement
-                      const text = e.currentTarget.querySelector('.button-text') as HTMLElement
-                      const textSpan = e.currentTarget.querySelector('.button-text span') as HTMLElement
-                      if (fill) {
-                        fill.style.width = '100%'
-                        fill.style.transform = 'translateX(-50%) scaleY(1)'
+                      if (window.innerWidth >= 768) {
+                        const fill = e.currentTarget.querySelector('.button-fill') as HTMLElement
+                        const arrow = e.currentTarget.querySelector('.button-arrow') as HTMLElement
+                        const text = e.currentTarget.querySelector('.button-text') as HTMLElement
+                        const textSpan = e.currentTarget.querySelector('.button-text span') as HTMLElement
+                        if (fill) {
+                          fill.style.width = '100%'
+                          fill.style.transform = 'translateX(-50%) scaleY(1)'
+                        }
+                        if (arrow) {
+                          arrow.style.opacity = '1'
+                          arrow.style.right = '-14px'
+                        }
+                        if (text) text.style.color = 'white'
+                        if (textSpan) textSpan.style.transform = 'translateX(-8px)'
                       }
-                      if (arrow) {
-                        arrow.style.opacity = '1'
-                        arrow.style.right = '-14px'
-                      }
-                      if (text) text.style.color = 'white'
-                      if (textSpan) textSpan.style.transform = 'translateX(-8px)'
                     }}
                     onMouseLeave={(e) => {
-                      const fill = e.currentTarget.querySelector('.button-fill') as HTMLElement
-                      const arrow = e.currentTarget.querySelector('.button-arrow') as HTMLElement
-                      const text = e.currentTarget.querySelector('.button-text') as HTMLElement
-                      const textSpan = e.currentTarget.querySelector('.button-text span') as HTMLElement
-                      if (fill) {
-                        fill.style.width = '0%'
-                        fill.style.transform = 'translateX(-50%) scaleY(0)'
+                      if (window.innerWidth >= 768) {
+                        const fill = e.currentTarget.querySelector('.button-fill') as HTMLElement
+                        const arrow = e.currentTarget.querySelector('.button-arrow') as HTMLElement
+                        const text = e.currentTarget.querySelector('.button-text') as HTMLElement
+                        const textSpan = e.currentTarget.querySelector('.button-text span') as HTMLElement
+                        if (fill) {
+                          fill.style.width = '0%'
+                          fill.style.transform = 'translateX(-50%) scaleY(0)'
+                        }
+                        if (arrow) {
+                          arrow.style.opacity = '0'
+                          arrow.style.right = '-30px'
+                        }
+                        if (text) text.style.color = '#4682B4'
+                        if (textSpan) textSpan.style.transform = 'translateX(0)'
                       }
-                      if (arrow) {
-                        arrow.style.opacity = '0'
-                        arrow.style.right = '-30px'
-                      }
-                      if (text) text.style.color = '#4682B4'
-                      if (textSpan) textSpan.style.transform = 'translateX(0)'
                     }}
                   >
                     {/* Fond bleu qui se remplit */}

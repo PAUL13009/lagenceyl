@@ -94,9 +94,11 @@ export function useScrollButtonAnimation() {
         entries.forEach((entry) => {
           if (isMobile()) {
             if (entry.isIntersecting && !isCurrentlyAnimated) {
-              // Déclencher l'animation dès que le bouton est visible
-              triggerAnimation()
-              isCurrentlyAnimated = true
+              // Délai pour que l'animation soit visible
+              setTimeout(() => {
+                triggerAnimation()
+                isCurrentlyAnimated = true
+              }, 300)
             } else if (!entry.isIntersecting && isCurrentlyAnimated) {
               // Réinitialiser quand le bouton sort du viewport pour permettre de réanimer
               resetAnimation()
@@ -106,7 +108,7 @@ export function useScrollButtonAnimation() {
         })
       },
       {
-        threshold: 0.1, // Déclencher dès que 10% du bouton est visible
+        threshold: 0.5, // Déclencher quand 50% du bouton est visible
         rootMargin: '0px'
       }
     )
