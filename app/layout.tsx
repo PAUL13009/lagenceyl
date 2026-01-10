@@ -7,11 +7,15 @@ const poppins = Poppins({
   subsets: ['latin'],
   weight: ['300', '400', '500', '600', '700'],
   variable: '--font-poppins',
+  display: 'swap',
+  preload: true,
 })
 
 const playfair = Playfair_Display({ 
   subsets: ['latin'],
   variable: '--font-playfair',
+  display: 'swap',
+  preload: true,
 })
 
 export const metadata: Metadata = {

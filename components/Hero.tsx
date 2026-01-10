@@ -1,6 +1,7 @@
 'use client'
 
-import { useRef } from 'react'
+import { useRef, useEffect } from 'react'
+import Image from 'next/image'
 import AnimatedContent from './AnimatedContent'
 import VariableProximity from './VariableProximity'
 import { useScrollButtonAnimation } from '@/hooks/useScrollButtonAnimation'
@@ -38,16 +39,44 @@ export default function Hero({
   const heroButtonRef = useScrollButtonAnimation()
   const heroSecondaryButtonRef = useScrollButtonAnimation()
 
+  // Preload hero image for better LCP
+  useEffect(() => {
+    if (imagePath && typeof window !== 'undefined') {
+      // Check if link already exists
+      const existingLink = document.querySelector(`link[rel="preload"][as="image"][href="${imagePath}"]`)
+      if (existingLink) return
+      
+      const link = document.createElement('link')
+      link.rel = 'preload'
+      link.as = 'image'
+      link.href = imagePath
+      link.setAttribute('fetchpriority', 'high')
+      document.head.appendChild(link)
+      
+      return () => {
+        const linkToRemove = document.querySelector(`link[rel="preload"][as="image"][href="${imagePath}"]`)
+        if (linkToRemove) {
+          document.head.removeChild(linkToRemove)
+        }
+      }
+    }
+  }, [imagePath])
+
   return (
     <section ref={containerRef as any} id={id} className="relative h-screen flex items-center justify-center overflow-hidden" style={{ marginTop: 0, paddingTop: 0 }} aria-labelledby="hero-title">
       {/* Image ou Vidéo de fond */}
       <div className="absolute inset-0 z-0">
         <div className="relative w-full h-full">
           {imagePath ? (
-            <img
+            <Image
                 src={imagePath}
                 alt={imageAlt || "Agence immobilière à Marseille - Estimation, vente et location immobilière"}
-                className="absolute inset-0 w-full h-full object-cover"
+                fill
+                priority
+                fetchPriority="high"
+                quality={85}
+                sizes="100vw"
+                className="object-cover"
               />
           ) : videoPath ? (
             <video
@@ -55,6 +84,7 @@ export default function Hero({
               loop
               muted
               playsInline
+              preload="metadata"
               className="absolute inset-0 w-full h-full object-cover"
               aria-label="Présentation de l'agence immobilière à Marseille"
             >

@@ -100,6 +100,7 @@ export default function Features() {
                     loop
                     muted
                     playsInline
+                    preload="metadata"
                     className="absolute inset-0 w-full h-full object-cover"
                     aria-label={`Vidéo de présentation du service ${currentFeature.title} - ${currentFeature.subtitle}`}
                   >
@@ -112,7 +113,7 @@ export default function Features() {
                     alt={currentFeature.imageAlt}
                     fill
                     className="object-cover"
-                    priority
+                    loading="lazy"
                   />
                 ) : null}
                 {/* Overlay sombre pour la lisibilité du texte */}

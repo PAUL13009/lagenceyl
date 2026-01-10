@@ -463,7 +463,7 @@ export default function Home() {
                   alt="Vue des Calanques de Marseille depuis l'agence immobilière"
                   fill
                   className="object-cover"
-                  priority
+                  loading="lazy"
                 />
                 {/* CTA overlay sur l'image - Desktop */}
                 <div 

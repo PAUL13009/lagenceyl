@@ -79,7 +79,8 @@ export default function PropertyCard({ property, currentIndex, onPrevious, onNex
                 alt={image.alt}
                 fill
                 className="object-cover"
-                priority={index === 0}
+                priority={index === 0 && currentIndex === 0}
+                loading={index === 0 && currentIndex === 0 ? undefined : "lazy"}
               />
             </div>
           ))}
