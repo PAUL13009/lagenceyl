@@ -1,0 +1,2 @@
+# Exclure les Edge Functions Supabase (Deno) du build Vercel
+supabase/
