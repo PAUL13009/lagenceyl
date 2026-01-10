@@ -17,6 +17,7 @@ interface HeroProps {
   id?: string
   videoPath?: string
   imagePath?: string
+  imageAlt?: string
 }
 
 export default function Hero({ 
